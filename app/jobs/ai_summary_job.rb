@@ -49,7 +49,7 @@ class AiSummaryJob < ActiveJob::Base
     Thread.current[:redmine_ai_summary_updating] = true
 
     begin
-      issue.init_journal(User.current || User.anonymous, 'Resumo IA atualizado automaticamente.')
+      issue.skip_journal = true
       issue.custom_field_values = {
         cf.id.to_s => summary
       }
