@@ -32,8 +32,6 @@ module RedmineAiSummary
           max_chars: max_chars
         )
 
-        RedmineAiSummary::Logger.info("Prompt final: #{prompt.inspect}")
-
         response_text =
           case provider
           when 'ollama'
@@ -62,7 +60,6 @@ module RedmineAiSummary
         base = ensure_trailing_slash(endpoint_url)
         uri = URI.join(base, 'api/generate')
 
-        RedmineAiSummary::Logger.info("PROMPT: #{prompt.to_s[0,1000].inspect}")
         req = Net::HTTP::Post.new(uri)
         req['Content-Type'] = 'application/json'
         req.body = {
@@ -75,7 +72,6 @@ module RedmineAiSummary
         }.to_json
 
         res = perform_http(uri, req)
-        RedmineAiSummary::Logger.info("Resposta bruta IA: #{res.body}")
         json = JSON.parse(res.body)
         text =
           json['response'] ||
@@ -110,7 +106,6 @@ module RedmineAiSummary
         }.to_json
 
         res = perform_http(uri, req)
-        RedmineAiSummary::Logger.info("Resposta bruta IA: #{res.body}")
         json = JSON.parse(res.body)
         json.dig('choices', 0, 'message', 'content').to_s
       end

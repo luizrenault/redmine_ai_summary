@@ -49,15 +49,24 @@ class AiSummaryJob < ActiveJob::Base
     Thread.current[:redmine_ai_summary_updating] = true
 
     begin
-      issue.skip_journal = true
-      issue.custom_field_values = {
-        cf.id.to_s => summary
-      }
-      issue.save!(validate: false)
-      RedmineAiSummary::Logger.info("Resumo atualizado com sucesso na issue ##{issue.id}")
+      cv = issue.custom_values.find_by(custom_field_id: cf.id)
+
+      if cv
+        cv.update_column(:value, summary)
+      else
+        CustomValue.create!(
+          customized: issue,
+          custom_field: cf,
+          value: summary
+        )
+      end
+
+      RedmineAiSummary::Logger.info("Resumo atualizado silenciosamente issue ##{issue.id}")
+
     ensure
       Thread.current[:redmine_ai_summary_updating] = false
     end
+
   rescue => e
     RedmineAiSummary::Logger.error("Erro no AiSummaryJob para issue ##{issue_id}: #{e.class} - #{e.message}")
     raise
@@ -117,11 +126,7 @@ class AiSummaryJob < ActiveJob::Base
     
     parts.reject(&:blank?).join("\n")
 
-    RedmineAiSummary::Logger.info("Parts coletadas: #{parts.inspect}")
-    
     text = parts.join("\n").strip
-
-    RedmineAiSummary::Logger.info("DEBUG build_issue_text => #{text.inspect}")
 
     text
   end
