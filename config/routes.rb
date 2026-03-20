@@ -1,0 +1,1 @@
+post 'ai_summary/test_connection', to: 'ai_summary_settings#test_connection'
