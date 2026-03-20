@@ -34,8 +34,6 @@ class AiSummaryJob < ActiveJob::Base
       return
     end
 
-    RedmineAiSummary::Logger.info("Texto montado para issue ##{issue.id}: #{issue_text.inspect}")
-
     summary = RedmineAiSummary::AiClient.generate_summary(
       issue_text: issue_text,
       max_chars: max_chars
