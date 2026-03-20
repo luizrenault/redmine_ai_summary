@@ -5,6 +5,14 @@ require_relative 'lib/redmine_ai_summary/ai_client'
 require_relative 'lib/redmine_ai_summary/connection_tester'
 require_relative 'lib/redmine_ai_summary/issue_patch'
 
+Rails.configuration.to_prepare do
+  require_dependency File.expand_path('app/helpers/ai_summary_settings_helper', __dir__)
+
+  unless ActionView::Base.included_modules.include?(AiSummarySettingsHelper)
+    ActionView::Base.send(:include, AiSummarySettingsHelper)
+  end
+end
+
 Redmine::Plugin.register :redmine_ai_summary do
   name 'Redmine AI Summary'
   author 'Luiz + ChatGPT'
