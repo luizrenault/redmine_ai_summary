@@ -34,6 +34,8 @@ class AiSummaryJob < ActiveJob::Base
       return
     end
 
+    RedmineAiSummary::Logger.debug("Texto montado para issue ##{issue.id}: #{issue_text[0, 500]}")
+
     summary = RedmineAiSummary::AiClient.generate_summary(
       issue_text: issue_text,
       max_chars: max_chars
@@ -58,13 +60,10 @@ class AiSummaryJob < ActiveJob::Base
           value: summary
         )
       end
-
       RedmineAiSummary::Logger.info("Resumo atualizado silenciosamente issue ##{issue.id}")
-
     ensure
       Thread.current[:redmine_ai_summary_updating] = false
     end
-
   rescue => e
     RedmineAiSummary::Logger.error("Erro no AiSummaryJob para issue ##{issue_id}: #{e.class} - #{e.message}")
     raise
@@ -121,12 +120,7 @@ class AiSummaryJob < ActiveJob::Base
       end
     end
 
-    
     parts.reject(&:blank?).join("\n")
-
-    text = parts.join("\n").strip
-
-    text
   end
 
   def normalize_text(text)

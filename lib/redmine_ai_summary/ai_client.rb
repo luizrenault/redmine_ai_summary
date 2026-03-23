@@ -32,6 +32,8 @@ module RedmineAiSummary
           max_chars: max_chars
         )
 
+        RedmineAiSummary::Logger.debug("Gerando resumo via provider=#{provider}, model=#{settings['model']}")
+
         response_text =
           case provider
           when 'ollama'

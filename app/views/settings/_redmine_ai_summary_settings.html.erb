@@ -1,60 +1,123 @@
+<% require_dependency 'ai_summary_settings_helper' %>
+
 <p>
-  <label>Habilitado</label>
-  <%= check_box_tag 'settings[enabled]', '1', @settings['enabled'].to_s == '1' %>
+  <label for="settings_enabled">Habilitado</label>
+  <%= check_box_tag 'settings[enabled]', '1', ai_summary_checked?(@settings, 'enabled') %>
 </p>
 
 <p>
-  <label>Provedor</label>
+  <label for="settings_provider">Provedor</label>
   <%= select_tag 'settings[provider]',
-      options_for_select([['Ollama','ollama'],['OpenAI compatible','openai_compatible']], @settings['provider']) %>
+      options_for_select(ai_summary_provider_options, @settings['provider']) %>
 </p>
 
 <p>
-  <label>URL</label>
+  <label for="settings_endpoint_url">URL do servidor de IA</label>
   <%= text_field_tag 'settings[endpoint_url]', @settings['endpoint_url'], size: 80 %>
 </p>
 
 <p>
-  <label>Modelo</label>
-  <%= text_field_tag 'settings[model]', @settings['model'] %>
+  <label for="settings_model">Modelo</label>
+  <%= text_field_tag 'settings[model]', @settings['model'], size: 60 %>
 </p>
 
 <p>
-  <label>Campo de resumo</label>
+  <label for="settings_api_key">API Key</label>
+  <%= password_field_tag 'settings[api_key]', @settings['api_key'], size: 60, autocomplete: 'off' %>
+</p>
+
+<p>
+  <label for="settings_custom_field_id">Campo personalizado para o resumo</label>
   <%= select_tag 'settings[custom_field_id]',
-      options_from_collection_for_select(IssueCustomField.all, :id, :name, @settings['custom_field_id']),
+      options_for_select(ai_summary_issue_custom_field_options, ai_summary_selected_custom_field(@settings)),
       include_blank: '-- Selecione --' %>
 </p>
 
-<p>
-  <label>Máx caracteres</label>
-  <%= number_field_tag 'settings[max_chars]', @settings['max_chars'] %>
+<p class="info">
+  O campo escolhido será atualizado pelo plugin e não será incluído no texto enviado à IA.
 </p>
 
 <p>
-  <label>Incluir comentários</label>
-  <%= check_box_tag 'settings[include_journals]', '1', @settings['include_journals'].to_s == '1' %>
+  <label for="settings_max_chars">Máximo de caracteres</label>
+  <%= number_field_tag 'settings[max_chars]', @settings['max_chars'], min: 50, max: 5000 %>
 </p>
 
 <p>
-  <label>Overwrite</label>
-  <%= check_box_tag 'settings[overwrite_existing]', '1', @settings['overwrite_existing'].to_s == '1' %>
+  <label for="settings_include_journals">Incluir comentários/journals</label>
+  <%= check_box_tag 'settings[include_journals]', '1', ai_summary_checked?(@settings, 'include_journals') %>
 </p>
 
 <p>
-  <label>Trigger create</label>
-  <%= check_box_tag 'settings[trigger_on_create]', '1', @settings['trigger_on_create'].to_s == '1' %>
+  <label for="settings_overwrite_existing">Sobrescrever resumo existente</label>
+  <%= check_box_tag 'settings[overwrite_existing]', '1', ai_summary_checked?(@settings, 'overwrite_existing') %>
 </p>
 
 <p>
-  <label>Trigger update</label>
-  <%= check_box_tag 'settings[trigger_on_update]', '1', @settings['trigger_on_update'].to_s == '1' %>
+  <label for="settings_trigger_on_create">Gerar ao criar tarefa</label>
+  <%= check_box_tag 'settings[trigger_on_create]', '1', ai_summary_checked?(@settings, 'trigger_on_create') %>
 </p>
 
 <p>
-  <label>Prompt</label><br>
-  <%= text_area_tag 'settings[prompt_template]',
-      @settings['prompt_template'],
-      rows: 10,
-      cols: 100 %>
+  <label for="settings_trigger_on_update">Gerar ao alterar tarefa</label>
+  <%= check_box_tag 'settings[trigger_on_update]', '1', ai_summary_checked?(@settings, 'trigger_on_update') %>
 </p>
+
+<p>
+  <label for="settings_ignored_prop_keys">Campos ignorados para disparo automático</label>
+  <%= text_field_tag 'settings[ignored_prop_keys]', @settings['ignored_prop_keys'], size: 80 %>
+</p>
+
+<p class="info">
+  Informe chaves separadas por vírgula, por exemplo: <code>done_ratio,assigned_to_id,updated_on</code>
+</p>
+
+<p>
+  <label for="settings_log_level">Nível de log</label>
+  <%= select_tag 'settings[log_level]',
+      options_for_select(ai_summary_log_level_options, @settings['log_level']) %>
+</p>
+
+<p>
+  <label for="settings_prompt_template">Prompt</label><br>
+  <%= text_area_tag 'settings[prompt_template]', @settings['prompt_template'], rows: 14, cols: 100 %>
+</p>
+
+<hr>
+
+<p>
+  <button type="button" id="ai-summary-test-connection">Testar conexão</button>
+  <span id="ai-summary-test-result" style="margin-left: 10px;"></span>
+</p>
+
+<script>
+(function() {
+  var button = document.getElementById('ai-summary-test-connection');
+  var result = document.getElementById('ai-summary-test-result');
+
+  if (!button) return;
+
+  button.addEventListener('click', async function() {
+    result.textContent = 'Testando...';
+
+    try {
+      var form = button.closest('form');
+      var formData = new FormData(form);
+
+      var response = await fetch('<%= url_for(controller: "ai_summary_settings", action: "test_connection") %>', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        }
+      });
+
+      var json = await response.json();
+      result.textContent = json.message || (json.success ? 'OK' : 'Erro');
+      result.style.color = json.success ? 'green' : 'red';
+    } catch (e) {
+      result.textContent = 'Erro ao testar conexão: ' + e;
+      result.style.color = 'red';
+    }
+  });
+})();
+</script>
