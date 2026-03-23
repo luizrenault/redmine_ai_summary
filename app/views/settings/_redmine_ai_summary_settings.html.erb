@@ -1,14 +1,12 @@
-<% require_dependency 'ai_summary_settings_helper' %>
-
 <p>
   <label for="settings_enabled">Habilitado</label>
-  <%= check_box_tag 'settings[enabled]', '1', ai_summary_checked?(@settings, 'enabled') %>
+  <%= check_box_tag 'settings[enabled]', '1', @settings['enabled'].to_s == '1' %>
 </p>
 
 <p>
   <label for="settings_provider">Provedor</label>
   <%= select_tag 'settings[provider]',
-      options_for_select(ai_summary_provider_options, @settings['provider']) %>
+      options_for_select([['Ollama','ollama'],['OpenAI compatible','openai_compatible']], @settings['provider']) %>
 </p>
 
 <p>
@@ -29,7 +27,7 @@
 <p>
   <label for="settings_custom_field_id">Campo personalizado para o resumo</label>
   <%= select_tag 'settings[custom_field_id]',
-      options_for_select(ai_summary_issue_custom_field_options, ai_summary_selected_custom_field(@settings)),
+      options_from_collection_for_select(IssueCustomField.all, :id, :name, @settings['custom_field_id']),
       include_blank: '-- Selecione --' %>
 </p>
 
@@ -44,22 +42,22 @@
 
 <p>
   <label for="settings_include_journals">Incluir comentários/journals</label>
-  <%= check_box_tag 'settings[include_journals]', '1', ai_summary_checked?(@settings, 'include_journals') %>
+  <%= check_box_tag 'settings[include_journals]', '1', @settings['include_journals'].to_s == '1' %>
 </p>
 
 <p>
   <label for="settings_overwrite_existing">Sobrescrever resumo existente</label>
-  <%= check_box_tag 'settings[overwrite_existing]', '1', ai_summary_checked?(@settings, 'overwrite_existing') %>
+  <%= check_box_tag 'settings[overwrite_existing]', '1', @settings['overwrite_existing'].to_s == '1' %>
 </p>
 
 <p>
   <label for="settings_trigger_on_create">Gerar ao criar tarefa</label>
-  <%= check_box_tag 'settings[trigger_on_create]', '1', ai_summary_checked?(@settings, 'trigger_on_create') %>
+  <%= check_box_tag 'settings[trigger_on_create]', '1', @settings['trigger_on_create'].to_s == '1' %>
 </p>
 
 <p>
   <label for="settings_trigger_on_update">Gerar ao alterar tarefa</label>
-  <%= check_box_tag 'settings[trigger_on_update]', '1', ai_summary_checked?(@settings, 'trigger_on_update') %>
+  <%= check_box_tag 'settings[trigger_on_update]', '1', @settings['trigger_on_update'].to_s == '1' %>
 </p>
 
 <p>
@@ -74,7 +72,7 @@
 <p>
   <label for="settings_log_level">Nível de log</label>
   <%= select_tag 'settings[log_level]',
-      options_for_select(ai_summary_log_level_options, @settings['log_level']) %>
+      options_for_select([['Debug', 'debug'], ['Info', 'info'], ['Warn', 'warn'], ['Error', 'error']], @settings['log_level']) %>
 </p>
 
 <p>

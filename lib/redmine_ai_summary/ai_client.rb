@@ -86,8 +86,7 @@ module RedmineAiSummary
 
       def call_openai_compatible(endpoint_url:, model:, api_key:, prompt:)
         base = ensure_trailing_slash(endpoint_url)
-        path = base.end_with?('/v1/') ? 'chat/completions' : 'v1/chat/completions'
-        uri = URI.join(base, path)
+        uri = URI.join(base, 'chat/completions')
 
         req = Net::HTTP::Post.new(uri)
         req['Content-Type'] = 'application/json'
@@ -106,10 +105,18 @@ module RedmineAiSummary
           ],
           temperature: 0.2
         }.to_json
-
+        RedmineAiSummary::Logger.debug("[AI] POST #{uri}")
+        RedmineAiSummary::Logger.debug("[AI] BODY #{req.body}")
         res = perform_http(uri, req)
+        RedmineAiSummary::Logger.debug("[AI] RESPONSE #{res.body}")
         json = JSON.parse(res.body)
-        json.dig('choices', 0, 'message', 'content').to_s
+        content = json.dig('choices', 0, 'message', 'content')
+
+        if content.nil? || content.strip.empty?
+          raise "Resposta vazia da API: #{json}"
+        end
+
+content
       end
 
       def perform_http(uri, req)
